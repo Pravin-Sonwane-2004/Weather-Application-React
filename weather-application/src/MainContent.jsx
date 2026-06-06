@@ -1,37 +1,62 @@
-import { useState } from "react"
+import { useState, useEffect } from "react";
 import FetchData from "./FetchData";
-// this wont work i need to use here useEffect in which i can return the apus
+
 export default function MainContent() {
-   
+  const [city, setCity] = useState("");
+  const [searchCity, setSearchCity] = useState("");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-    const [state,setState] = useState(false);
-    const [city,setCity] = useState("");
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+  useEffect(() => {
+    if (!searchCity) return;
 
-    if (loading) return <p>Loading data for {city}...</p>;
-  if (error) return <p style={{ color: 'red' }}>Error: {error}</p>;
-    return (
-        <>
-            <div style={{display:'flex',flexDirection:'column', gap:'40px'}}>
-                <div>
-            <label htmlFor="city">Enter The City:   </label>
-            <input type="text" style={{ color:'black'}} 
-                    placeholder="Enter city name..." 
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)} // Updates state on type
-                />
+    const executeFetch = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await FetchData(searchCity);
+        setData(result);
+      } catch (err) {
+        setError(err.message || "Something went wrong");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    executeFetch();
+  }, [searchCity]);
+
+  if (loading) return <p>Loading data for {searchCity}...</p>;
+  if (error) return <p style={{ color: "red" }}>Error: {error}</p>;
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div>
+        <label htmlFor="city">Enter The City: </label>
+        <input
+          id="city"
+          type="text"
+          style={{ color: "black" }}
+          placeholder="Enter city name..."
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+        />
+        <button 
+          style={{ fontSize: "20px", color: "black", borderRadius: "10px", marginLeft: "10px" }} 
+          onClick={() => setSearchCity(city)}
+        >
+          Search
+        </button>
+      </div>
+
+      {data && (
+        <div>
+          <h1>Data for {searchCity}</h1>
+          {/* Render your data properties here */}
+          <pre>{JSON.stringify(data, null, 2)}</pre>
         </div>
-        <div style={{display:'flex', alignItems:'center',justifyContent:'center'}}>
-             <button style={{fontSize:'20px',color:'black', border:'20px' ,borderBlock:'10px',borderRadius: '10px'}} 
-             onClick={()=>setState(prev => !prev)}>Search   </button>
-                <div style={{ display: 'flex' }}>
-             {state && <h1>data is showing</h1>} 
-             </div>
-                
-        </div>
-        </div>
-        </>
-    )
+      )}
+    </div>
+  );
 }
